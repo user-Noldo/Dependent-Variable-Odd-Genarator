@@ -1,14 +1,13 @@
 //@version=4
-study("Dependent Variable Odd Generator For Markov Process")
+study("Dependent Variable Odd Generator For Machine Learning Techniques")
+
+// MIT License
 
 src = close 
 
 // MONEY FLOW INDEX (MFI)
 
-
 t_mfi = 14
-
-
 
 // Essential Functions 
 
@@ -20,7 +19,6 @@ f_sum(_src , _length) =>
     
     for i = 0 to _length_adjusted-1
         _output := _output + _src[i]
-
 
 
 // MONEY FLOW INDEX =====> FOR BULL OR BEAR MARKET
