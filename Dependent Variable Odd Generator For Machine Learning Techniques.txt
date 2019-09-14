@@ -1,13 +1,38 @@
 //@version=4
-study("Dependent Variable Odd Generator For Machine Learning Techniques")
-
 // MIT License
+
+//Copyright (c) 2019 user-Noldo
+
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
+
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
+
+
+study("Dependent Variable Odd Generator For Machine Learning Techniques")
 
 src = close 
 
+
 // MONEY FLOW INDEX (MFI)
 
+// Money Flow Index Period
+
 t_mfi = 14
+
 
 // Essential Functions 
 
@@ -21,7 +46,8 @@ f_sum(_src , _length) =>
         _output := _output + _src[i]
 
 
-// MONEY FLOW INDEX =====> FOR BULL OR BEAR MARKET
+
+// MONEY FLOW INDEX =====> FOR BULL OR BEAR MARKET (CLOSE)
 
 
 upper_s = f_sum(volume * (change(src) <= 0 ? 0 : src), t_mfi)
@@ -31,7 +57,7 @@ lower_s = f_sum(volume * (change(src) >= 0 ? 0 : src), t_mfi)
 _market_index = rsi(upper_s, lower_s)
 
 
-// BOLLINGER BANDS ======> FOR STAGNANT MARKET
+// BOLLINGER BANDS ======> FOR STAGNANT MARKET (Now we must find Bollinger Band Width)
 
 t_bb = 20
 
@@ -54,7 +80,7 @@ basis  = e
 _bbw    = (upband - dnband) / basis
 
 
-// Bollinger Band Width MFI 
+// Bollinger Band Width Money Flow Index (BBW MFI)
 
 t_bbwmfi = 14
 
@@ -90,7 +116,9 @@ _bear              = ( _market_index < 20  ? (_market_index) :
                       (_market_index >= 80 ? ( _market_index) :   na))
 
 
-// Now we ll do venn scheme 
+
+
+// Now we ll do venn scheme (Probability Cluster)
 
 
 _venn = (_bull + _bear + _stagnant)
@@ -103,11 +131,12 @@ _odd_stagnant = _stagnant / _coeff
 
 
 
-
 // Plot data
 
 plot(_odd_bull     , color=color.blue    , transp = 0)
 plot(_odd_bear     , color=color.green   , transp = 0)
 plot(_odd_stagnant , color=color.red     , transp = 0)
+
+
 
 
