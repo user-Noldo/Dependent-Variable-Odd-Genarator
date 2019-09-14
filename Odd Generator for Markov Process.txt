@@ -1,0 +1,115 @@
+//@version=4
+study("Dependent Variable Odd Generator For Markov Process")
+
+src = close 
+
+// MONEY FLOW INDEX (MFI)
+
+
+t_mfi = 14
+
+
+
+// Essential Functions 
+
+f_sum(_src , _length) => 
+
+    _output  = 0.00 
+    
+    _length_adjusted = _length < 1 ? 1 : _length
+    
+    for i = 0 to _length_adjusted-1
+        _output := _output + _src[i]
+
+
+
+// MONEY FLOW INDEX =====> FOR BULL OR BEAR MARKET
+
+
+upper_s = f_sum(volume * (change(src) <= 0 ? 0 : src), t_mfi)
+lower_s = f_sum(volume * (change(src) >= 0 ? 0 : src), t_mfi)
+
+
+_market_index = rsi(upper_s, lower_s)
+
+
+// BOLLINGER BANDS ======> FOR STAGNANT MARKET
+
+t_bb = 20
+
+Multiplier = 2
+
+
+e = ema(src,t_bb)
+
+std = stdev(src , t_bb )
+
+
+upband = e + (Multiplier * std)
+dnband = e - (Multiplier * std)
+basis  = e
+
+
+// Bollinger Band Width (BBW)
+
+
+_bbw    = (upband - dnband) / basis
+
+
+// Bollinger Band Width MFI 
+
+t_bbwmfi = 14
+
+// BBW MFI
+
+upper_sbbw = f_sum(volume * (change(_bbw) <= 0 ? 0 : _bbw), t_bbwmfi)
+lower_sbbw = f_sum(volume * (change(_bbw) >= 0 ? 0 : _bbw), t_bbwmfi)
+
+
+_bbwmf = rsi(upper_sbbw, lower_sbbw)
+
+
+/// ***** DEFINITION : INDEXES *****
+
+// Conditions  
+
+
+_stagnant              = ( _bbwmf < 20  ? (_bbwmf) : 
+                          (_bbwmf >= 20  and _bbwmf < 50) ? (100 - _bbwmf) : 
+                          (_bbwmf >= 50  and _bbwmf < 80) ? (100 - _bbwmf) : 
+                          (_bbwmf >= 80 ? (_bbwmf) :   na))
+
+
+_bull              = ( _market_index < 20  ? (100 - _market_index) : 
+                      (_market_index >= 20  and _market_index < 50) ? ( _market_index) : 
+                      (_market_index >= 50  and _market_index < 80) ? ( _market_index) : 
+                      (_market_index >= 80 ? (100 - _market_index) :   na))
+                    
+                    
+_bear              = ( _market_index < 20  ? (_market_index) : 
+                      (_market_index >= 20  and _market_index < 50) ? ( _market_index) : 
+                      (_market_index >= 50  and _market_index < 80) ? (100 - _market_index) : 
+                      (_market_index >= 80 ? ( _market_index) :   na))
+
+
+// Now we ll do venn scheme 
+
+
+_venn = (_bull + _bear + _stagnant)
+
+_coeff = (_venn) / 100
+
+_odd_bull     = _bull     / _coeff
+_odd_bear     = _bear     / _coeff
+_odd_stagnant = _stagnant / _coeff
+
+
+
+
+// Plot data
+
+plot(_odd_bull     , color=color.blue    , transp = 0)
+plot(_odd_bear     , color=color.green   , transp = 0)
+plot(_odd_stagnant , color=color.red     , transp = 0)
+
+
