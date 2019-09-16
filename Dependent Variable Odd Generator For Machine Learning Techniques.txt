@@ -100,7 +100,9 @@ _bbwmf = rsi(upper_sbbw, lower_sbbw)
 
 _bbw_stagnant = ( 100 - _bbwmf )
 
-_bbw_stagnant_factor = 1 + (( 100 - _bbwmf ) / 100 )
+_stagnant_factor = 1 + (( 100 - _bbwmf ) / 100 )
+
+_trend_factor    = 1 + (( _bbwmf ) / 100 )
 
 // Price Odds
 
@@ -109,23 +111,35 @@ _bbw_stagnant_factor = 1 + (( 100 - _bbwmf ) / 100 )
 _bull_gross  = (_market_index )
 _bear_gross  = (100 - _market_index )
 
-_coeff_bull  = (_market_index) / 100
-_coeff_bear  = (100 - _market_index) / 100
+_price_stagnant = (_bull_gross * _bear_gross ) / 100
 
-_price_stagnant    = (_bull_gross * _bear_gross ) / 100
-_stagnant    =  _price_stagnant * _bbw_stagnant_factor
+
+_price_bull  = (_bull_gross - _price_stagnant)
+
+_price_bear  = (_bear_gross - _price_stagnant)
+
+
+// Market Types with BBW Trend Factor
+
+_stagnant =  _price_stagnant * _stagnant_factor        // Pure Stagnant
+
+_bull     =  _price_bull     * _trend_factor           // Pure Bull
+
+_bear     =  _price_bear     * _trend_factor           // Pure Bear
 
 
 // Now we ll do venn scheme (Probability Cluster)
-// bull + bear = 100 - stagnant
-// Now only pure bull and bear markets are left and they can now divide the load by the coefficients.
-// (Pure bull + pure bear = active markets)
+// Pure Bull + Pure Bear + Pure Stagnant = 100 
+// Markets will get their share in the Probability Cluster 
 
-_active_markets = 100 - _stagnant
+ 
+_coeff = (_stagnant + _bull + _bear) / 100
 
-_odd_bull     =  (_active_markets) * (_coeff_bull)
-_odd_bear     =  (_active_markets) * (_coeff_bear)
-_odd_stagnant = _stagnant
+
+_odd_bull     = _bull / _coeff
+_odd_bear     = _bear / _coeff
+_odd_stagnant = _stagnant / _coeff
+
 
 // Plot data
 
