@@ -23,7 +23,7 @@
 
 
 
-study("Dependent Variable Odd Generator For Machine Learning Techniques")
+study("Dependent Variable Odd Generator v2.0")
 
 src = close 
 
@@ -32,7 +32,7 @@ src = close
 
 // Money Flow Index Period
 
-t_mfi   = 14
+length = input(5,minval = 5)
 
 
 // Essential Functions 
@@ -47,62 +47,74 @@ f_sum(_src , _length) =>
         _output := _output + _src[i]
 
 
+f_sma(_src, _length)=>
+    _length_adjusted = _length < 1 ? 1 : _length
+    float _sum = 0
+    for _i = 0 to (_length_adjusted - 1)
+        _sum := _sum + _src[_i]
+    _return = _sum / _length_adjusted
+   
+
+// Unlocked Exponential Moving Average Function
+
+f_ema(_src, _length)=>
+    _length_adjusted = _length < 1 ? 1 : _length
+    _multiplier = 2 / (_length_adjusted + 1)
+    _return  = 0.00
+    _return := na(_return[1]) ? _src : ((_src - _return[1]) * _multiplier) + _return[1]
+
+
+// Function Standard Deviation
+
+f_stdev(_src,_length) =>
+    float _output = na 
+    _length_adjusted = _length < 2 ? 2 : _length
+    _avg  = f_ema(_src , _length_adjusted)
+    evar  = (_src - _avg) * (_src - _avg)
+    evar2 = ((f_sum(evar,_length_adjusted))/_length_adjusted)
+    
+    _output := sqrt(evar2)
+
+
+// Linear Regression Channels : 
+
+f_pearson_corr(_src1, _src2, _length) =>
+
+    _length_adjusted = _length < 2 ? 2 : _length
+    _ema1 = f_ema(_src1, _length_adjusted)
+    _ema2 = f_ema(_src2, _length_adjusted)
+    isum = 0.0
+    for i = 0 to _length_adjusted - 1
+        isum := isum + (_src1[i] - _ema1) * (_src2[i] - _ema2)
+    isumsq1 = 0.0
+    for i = 0 to _length_adjusted - 1
+        isumsq1 := isumsq1 + pow(_src1[i] - _ema1, 2)
+    isumsq2 = 0.0
+    for i = 0 to _length_adjusted - 1
+        isumsq2 := isumsq2 + pow(_src2[i] - _ema2, 2)
+    pcc = isum/(sqrt(isumsq1*isumsq2))
+    pcc
+
+
+
 // MONEY FLOW INDEX =====> FOR BULL OR BEAR MARKET (CLOSE)
 
 
-upper_s = f_sum(volume * (change(src) <= 0 ? 0 : src), t_mfi)
-lower_s = f_sum(volume * (change(src) >= 0 ? 0 : src), t_mfi)
+upper_s = f_sum(volume * (change(src) <= 0 ? 0 : src), length)
+lower_s = f_sum(volume * (change(src) >= 0 ? 0 : src), length)
 
 _market_index = rsi(upper_s, lower_s)
 
 
-// BOLLINGER BANDS ======> FOR TREND OR RANGE MARKET (Now we must find Bollinger Band Width)
+// ADDITION : DOW FACTOR 
 
-t_bb = 20
-
-Multiplier = 2
+// Dow Theory Cycles 
 
 
-e = ema(src,t_bb)
+dow_coeff = f_pearson_corr(src,volume,length)
 
-std = stdev(src , t_bb )
+dow_factor = (1 + dow_coeff)
 
-
-upband = e + (Multiplier * std)
-dnband = e - (Multiplier * std)
-basis  = e
-
-
-// Bollinger Band Width (BBW)
-
-
-_bbw    = (upband - dnband) / basis
-
-
-// Bollinger Band Width Money Flow Index (BBW MFI)
-
-t_bbwmfi = 14
-
-// BBW MFI
-
-upper_sbbw = f_sum(volume * (change(_bbw) <= 0 ? 0 : _bbw), t_bbwmfi)
-lower_sbbw = f_sum(volume * (change(_bbw) >= 0 ? 0 : _bbw), t_bbwmfi)
-
-
-_bbwmf = rsi(upper_sbbw, lower_sbbw)
-
-
-/// ***** DEFINITION : ODDS *****
-
-// Bollinger Band Width Odds
-
-// Conditions 
-
-_bbw_stagnant = ( 100 - _bbwmf )
-
-_stagnant_factor = 1 + (( 100 - _bbwmf ) / 100 )
-
-_trend_factor    = 1 + (( _bbwmf ) / 100 )
 
 // Price Odds
 
@@ -111,21 +123,27 @@ _trend_factor    = 1 + (( _bbwmf ) / 100 )
 _bull_gross  = (_market_index )
 _bear_gross  = (100 - _market_index )
 
-_price_stagnant = (_bull_gross * _bear_gross ) / 100
+_price_stagnant = ((_bull_gross * _bear_gross ) / 100)
+_price_bull     =  (_bull_gross - _price_stagnant) 
+_price_bear     =  (_bear_gross - _price_stagnant) 
 
 
-_price_bull  = (_bull_gross - _price_stagnant)
+_coeff_price = (_price_stagnant + _price_bull + _price_bear) / 100 
 
-_price_bear  = (_bear_gross - _price_stagnant)
+
+_bull     = _price_bull / _coeff_price 
+_bear     = _price_bear / _coeff_price 
+_stagnant = _price_stagnant / _coeff_price
+
 
 
 // Market Types with BBW Trend Factor
 
-_stagnant =  _price_stagnant * _stagnant_factor        // Pure Stagnant
+_temp_stagnant =  _stagnant *  1          // Pure Stagnant
 
-_bull     =  _price_bull     * _trend_factor           // Pure Bull
+_temp_bull     =  _bull     * dow_factor  // Pure Bull
 
-_bear     =  _price_bear     * _trend_factor           // Pure Bear
+_temp_bear     =  100 - _bull             // Pure Bear
 
 
 // Now we ll do venn scheme (Probability Cluster)
@@ -133,18 +151,16 @@ _bear     =  _price_bear     * _trend_factor           // Pure Bear
 // Markets will get their share in the Probability Cluster 
 
  
-_coeff = (_stagnant + _bull + _bear) / 100
+_coeff = (_temp_stagnant + _temp_bull + _temp_bear) / 100
 
-
-_odd_bull     = _bull / _coeff
-_odd_bear     = _bear / _coeff
-_odd_stagnant = _stagnant / _coeff
+_odd_bull     = _temp_bull / _coeff
+_odd_bear     = _temp_bear / _coeff
+_odd_stagnant = _temp_stagnant / _coeff
 
 
 // Plot data
 
-plot(_odd_bull     , color=color.green , transp = 0)
-plot(_odd_bear     , color=color.red   , transp = 0)
-plot(_odd_stagnant , color=color.blue  , transp = 0)
-
+plot(_odd_bull     ,style = plot.style_area, color=color.green   , transp = 10)
+plot(_odd_bear     ,style = plot.style_area, color=color.red     , transp = 20)
+plot(_odd_stagnant ,style = plot.style_area, color=color.yellow  , transp = 30)
 
