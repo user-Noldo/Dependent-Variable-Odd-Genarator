@@ -160,7 +160,7 @@ _odd_stagnant = _temp_stagnant / _coeff
 
 // Plot data
 
-plot(_odd_bull     ,style = plot.style_area, color=color.green   , transp = 10)
-plot(_odd_bear     ,style = plot.style_area, color=color.red     , transp = 20)
-plot(_odd_stagnant ,style = plot.style_area, color=color.yellow  , transp = 30)
+plot(_odd_bull     ,style = plot.style_histogram, color=color.green   ,linewidth=4, transp = 10)
+plot(_odd_bear     ,style = plot.style_histogram, color=color.red     ,linewidth=4, transp = 20)
+plot(_odd_stagnant ,style = plot.style_histogram, color=color.yellow  ,linewidth=4, transp = 30)
 
