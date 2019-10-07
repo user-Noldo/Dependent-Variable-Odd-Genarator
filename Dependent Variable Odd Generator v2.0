@@ -26,13 +26,13 @@
 study("Dependent Variable Odd Generator v2.0")
 
 src = close 
-
+method          = input(title="METHOD", options=["MFI", "RSI"], defval="MFI")
 
 // MONEY FLOW INDEX (MFI)
 
 // Money Flow Index Period
 
-length = input(5,minval = 5)
+length = input(5,minval = 2)
 
 
 // Essential Functions 
@@ -117,12 +117,55 @@ dow_bull_factor = (1 + dow_coeff)
 dow_bear_factor = (1 - dow_coeff)
 
 
+// RSI (Close)
+
+// Function RMA 
+
+f_rma(_src, _length) =>
+    _length_adjusted = _length < 1 ? 1 : _length
+    alpha = _length_adjusted
+    sum = 0.0
+    sum := (_src + (alpha - 1) * nz(sum[1])) / alpha
+
+
+// Function Relative Strength Index (RSI)
+
+f_rsi(_src, _length) => 
+
+    _output = 0.00 
+    _length_adjusted = _length < 0 ? 0 : _length
+
+    u = _length_adjusted < 1 ? max(_src - _src[_length_adjusted], 0) : max(_src - _src[1] , 0) // upward change
+    d = _length_adjusted < 1 ? max(_src[_length_adjusted] - _src, 0) : max(_src[1] - _src , 0) // downward change
+    rs = f_rma(u, _length) / f_rma(d, _length)
+    res = 100 - 100 / (1 + rs)
+    res
+
+
+_rsi = f_rsi(src, length)
+
+
+// Switchable Method Codes 
+
+_method = 0.00 
+
+
+if (method=="MFI")
+
+    _method:= _market_index 
+    
+if (method=="RSI")
+
+    _method:= _rsi   
+
+
+
 // Price Odds
 
 // Conditions  
 
-_bull_gross  = (_market_index )
-_bear_gross  = (100 - _market_index )
+_bull_gross  = (_method)
+_bear_gross  = (100 - _method )
 
 _price_stagnant = ((_bull_gross * _bear_gross ) / 100)
 _price_bull     =  (_bull_gross - _price_stagnant) 
