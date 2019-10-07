@@ -138,13 +138,18 @@ _stagnant = _price_stagnant / _coeff_price
 
 
 
-// Market Types with BBW Trend Factor
+// Market Types with Dow Factor
 
-_temp_stagnant =  _stagnant *  1                  // Pure Stagnant
+_temp_bull_gross     =  _bull     * dow_bull_factor       
 
-_temp_bull     =  _bull * dow_bull_factor         // Pure Bull
+_temp_bear_gross     =  _bear     * dow_bear_factor 
 
-_temp_bear     =  _bear * dow_bear_factor         // Pure Bear
+
+// Temporary Pure Odds 
+
+_temp_stagnant = ((_temp_bull_gross * _temp_bear_gross) / 100)
+_temp_bull     = _temp_bull_gross - _temp_stagnant 
+_temp_bear     = _temp_bear_gross - _temp_stagnant 
 
 
 // Now we ll do venn scheme (Probability Cluster)
